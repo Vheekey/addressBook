@@ -1,0 +1,314 @@
+<!doctype html>
+<html>
+<head>
+	<link rel="stylesheet" href="bootstrapFlatly.min.css" />
+	<script src="jquery.min.js"></script>
+    <script src="bootstrap.min.js"></script>
+    <script src="bootstrap.js"></script>
+	<title>Address Book</title>
+	
+	<style>
+		a { 
+			color: black; 
+			cursor: pointer; 
+		}
+		a:link, a:visited 
+		{ 
+			text-decoration: none; 
+			color: black; 
+		}
+		a:hover, a:active 
+		{ 
+			text-decoration: underline; 
+			color: black; 
+		}
+		body 
+		{ 
+			font: 12px/18px "Lucida Grande", "Lucida Sans Unicode", sans-serif; 
+			background-color: whitesmoke;
+		}
+
+		#table-for-contacts 
+		{ 
+			border-collapse: collapse; 
+		}
+		#table-for-contacts, #table-for-contacts th, #table-for-contacts td 
+		{ 
+			padding: 8px 16px; 
+			text-align: left; 
+			border: 0px solid #B9BABE; 
+		}
+		#table-for-contacts th 
+		{ 
+			font-weight: bold; 
+			font-size: 14px; 
+			color: #29344B; 
+		}
+		#table-for-contacts td 
+		{ 
+			color: #000; 
+		}
+		#table-for-contacts tr:nth-child(2n) 
+		{ 
+			background: #E8EDFF; 
+		}
+
+		#contacts-form 
+		{ 
+			padding: 10px; 
+		}
+		.text input, .button input 
+		{ 
+			padding: 5px; 
+			margin: 0; 
+			border: 1px solid #ccc; 
+			-moz-border-radius: 2px; 
+			-webkit-border-radius: 2px; 
+			border-radius: 2px; 
+		}
+		#contacts-form .item 
+		{ 
+			margin: 3px 0; 
+		}
+		#contacts-form label, #contacts-form .field 
+		{ 
+			display: inline-block; 
+			color: #0C0B07; 
+		}
+		#contacts-form label 
+		{ 
+			width: 110px; 
+			font-weight: bold; 
+			text-align: right; 
+			color: #666; 
+		}
+		#contacts-form .text input 
+		{ 
+			width: 176px; 
+			padding: 3px; 
+		}
+		#contacts-form .button
+		{ 
+			display: inline-block; 
+		}
+		#contacts-form .button-wrapper 
+		{ 
+			padding-left: 113px; 
+		}
+		.button input 
+		{ 
+			padding: 4px 8px; 
+			color: #343434; 
+			background-color: #fdfdfd; 
+			background: -moz-linear-gradient(#fdfdfd, #e1e1e1); 
+			background: -webkit-gradient(linear, 0 0, 0 100%, from(#fdfdfd), to(#e1e1e1)); 
+		}
+		.button-default input 
+		{ 
+			font-weight: bold; 
+			color: #fff; 
+			background-color: #7ca0c7; 
+			background: -moz-linear-gradient(#acc6e1, #7ca0c7); 
+			background: -webkit-gradient(linear, 0 0, 0 100%, from(#acc6e1), to(#7ca0c7)); 
+			border-color: #5b80b2; 
+		}
+
+		.item-text
+		{
+			border: solid red;
+		}
+		h1{
+			font-weight: bolder;
+			color: maroon;
+		}
+
+
+	</style>
+</head>
+<body>
+
+		<h1 class="text-center">CONTACTS</h1>
+	<p></p>
+	
+	
+	<div class="row">
+		<div class="col-md-4">
+				<form id="contacts-form">
+						<div class="item text">
+							<label>First name:</label>
+							<div class="field">
+								<input type="text" name="first_name" class="form-control" />
+							</div>
+						</div>
+						<div class="item text">
+							<label>Last name:</label>
+							<div class="field">
+								<input type="text" name="last_name" class="form-control" required="required" />
+							</div>
+						</div>
+						<div class="item text">
+							<label>Email:</label>
+							<div class="field">
+								<input type="email" name="email" class="form-control" required="required" />
+							</div>
+						</div>
+						<div class="button-wrapper">
+							<div class="item button">
+								<div class="field">
+									<input type="button" id="contacts-op-discard" value="Discard" class="btn btn-default" />
+								</div>
+							</div>
+							<div class="item button button-default">
+								<div class="field">
+									<input type="submit" id="save-contacts" value="Save" class="btn btn-success" />
+								</div>
+							</div>
+						</div>
+						<input type="hidden" name="id_entry" value="0" />
+					</form>
+		</div>
+		<div class="col-md-8">
+			<table id="table-for-contacts">
+				<tr id="contacts-head">
+					<th>ID</th>
+					<th>First name</th>
+					<th>Last name</th>
+					<th>Email</th>
+					<th>Actions</th>
+				</tr>
+			</table>
+		</div>
+	</div>
+	
+
+	
+
+	<script>
+		var Contacts = {
+			index: window.localStorage.getItem("Contacts:index"),
+			$table: document.getElementById("table-for-contacts"),
+			$form: document.getElementById("contacts-form"),
+			$save: document.getElementById("save-contacts"),
+			$discard: document.getElementById("contacts-op-discard"),
+
+			init: function() {
+				// initialize index for storing data
+				if (!Contacts.index) {
+					window.localStorage.setItem("Contacts:index", Contacts.index = 1);
+				}
+
+				// initialize form
+				Contacts.$form.reset();
+				Contacts.$discard.addEventListener("click", function(event) {
+					Contacts.$form.reset();
+					Contacts.$form.id_entry.value = 0;
+				}, true);
+				Contacts.$form.addEventListener("submit", function(event) {
+					var entry = {
+						id: parseInt(this.id_entry.value),
+						first_name: this.first_name.value,
+						last_name: this.last_name.value,
+						email: this.email.value
+					};
+					if (entry.id == 0) { // add entry
+						Contacts.storeAdd(entry);
+						Contacts.tableAdd(entry);
+					}
+					else { // edit entry
+						Contacts.storeEdit(entry);
+						Contacts.tableEdit(entry);
+					}
+
+					this.reset();
+					this.id_entry.value = 0;
+					event.preventDefault();
+				}, true);
+
+				// initialize table
+				if (window.localStorage.length - 1) {
+					var contacts_list = [], i, key;
+					for (i = 0; i < window.localStorage.length; i++) {
+						key = window.localStorage.key(i);
+						if (/Contacts:\d+/.test(key)) {
+							contacts_list.push(JSON.parse(window.localStorage.getItem(key)));
+						}
+					}
+
+					if (contacts_list.length) {
+						contacts_list
+							.sort(function(a, b) {
+								return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
+							})
+							.forEach(Contacts.tableAdd);
+					}
+				}
+				Contacts.$table.addEventListener("click", function(event) {
+					var op = event.target.getAttribute("data-op");
+					if (/edit|remove/.test(op)) {
+						var entry = JSON.parse(window.localStorage.getItem("Contacts:"+ event.target.getAttribute("data-id")));
+						if (op == "edit") {
+							Contacts.$form.first_name.value = entry.first_name;
+							Contacts.$form.last_name.value = entry.last_name;
+							Contacts.$form.email.value = entry.email;
+							Contacts.$form.id_entry.value = entry.id;
+						}
+						else if (op == "remove") {
+							if (confirm('Remove "'+ entry.first_name +' '+ entry.last_name +'" from your contacts?')) {
+								Contacts.storeRemove(entry);
+								Contacts.tableRemove(entry);
+							}
+						}
+						event.preventDefault();
+					}
+				}, true);
+			},
+
+			storeAdd: function(entry) {
+				entry.id = Contacts.index;
+				window.localStorage.setItem("Contacts:index", ++Contacts.index);
+				window.localStorage.setItem("Contacts:"+ entry.id, JSON.stringify(entry));
+			},
+			storeEdit: function(entry) {
+				window.localStorage.setItem("Contacts:"+ entry.id, JSON.stringify(entry));
+			},
+			storeRemove: function(entry) {
+				window.localStorage.removeItem("Contacts:"+ entry.id);
+			},
+
+			tableAdd: function(entry) {
+				var $tr = document.createElement("tr"), $td, key;
+				for (key in entry) {
+					if (entry.hasOwnProperty(key)) {
+						$td = document.createElement("td");
+						$td.appendChild(document.createTextNode(entry[key]));
+						$tr.appendChild($td);
+					}
+				}
+				$td = document.createElement("td");
+				$td.innerHTML = '<a data-op="edit" data-id="'+ entry.id +'">Edit</a> | <a data-op="remove" data-id="'+ entry.id +'">Remove</a>';
+				$tr.appendChild($td);
+				$tr.setAttribute("id", "entry-"+ entry.id);
+				Contacts.$table.appendChild($tr);
+			},
+			tableEdit: function(entry) {
+				var $tr = document.getElementById("entry-"+ entry.id), $td, key;
+				$tr.innerHTML = "";
+				for (key in entry) {
+					if (entry.hasOwnProperty(key)) {
+						$td = document.createElement("td");
+						$td.appendChild(document.createTextNode(entry[key]));
+						$tr.appendChild($td);
+					}
+				}
+				$td = document.createElement("td");
+				$td.innerHTML = '<a data-op="edit" data-id="'+ entry.id +'">Edit</a> | <a data-op="remove" data-id="'+ entry.id +'">Remove</a>';
+				$tr.appendChild($td);
+			},
+			tableRemove: function(entry) {
+				Contacts.$table.removeChild(document.getElementById("entry-"+ entry.id));
+			}
+		};
+		Contacts.init();
+	</script>
+</body>
+</html>
